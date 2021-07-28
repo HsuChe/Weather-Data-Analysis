@@ -1,126 +1,278 @@
-# Python API Homework - What's the Weather Like?
+<h3 align="center">Weather and Vacation Challenge</h3>
 
-## Background
+<p align="center">
+     Using API to understand correlation between distance from Equator and rising temperature. 
+    <br />
+    <a href="https://github.com/HsuChe/python-challenge"><strong>Project Github URL »</strong></a>
+    <br />
+    <br />
+  </p>
+</p>
 
-Whether financial, political, or social -- data's true power lies in its ability to answer questions definitively. So let's take what you've learned about Python requests, APIs, and JSON traversals to answer a fundamental question: "What's the weather like as we approach the equator?"
+<!-- ABOUT THE PROJECT -->
 
-Now, we know what you may be thinking: _"Duh. It gets hotter..."_
+## About The Project
 
-But, if pressed, how would you **prove** it?
+![hero image](https://github.com/HsuChe/pandas-challenge/blob/d552ad43a81eb152fc208a1a150dde6396f97a4f/images/fantasy-3077928_1920.jpg)
 
-![Equator](Images/equatorsign.png)
+We are going to prove the correlation between the distance from the equator and the rising max temperature. To do this, we will need to create a dataset through API.
 
-### Before You Begin
+Features of the dataset:
 
-1. Create a new repository for this project called `python-api-challenge`. **Do not add this homework to an existing repository**.
+* The Dataset will need the following for the proof.
 
-2. Clone the new repository to your computer.
+  * city: **The name of the city**
+  * Lat: **Latitude of the city**
+  * Lng: **Longitude of the city**
+  * Max Temp: **The maximum temperature of the city**
+  * Humidity: **Humidity level of the city on the date API was called**
+  * Cloudiness: **The cloudiness of the city the date API was called**
+  * Wind Speed: **Speed of the wind the date API was called**
+  * Date: **The date the API was called**
+* The dataset is in the csv file format with delimiter of comma.
+* Download Dataset click [HERE](https://github.com/HsuChe/pandas-challenge/blob/0f628f032da5f551f4000b80c5b4ccd4dd77c3ab/HeroesOfPymoli/Resources/purchase_data.csv)
 
-3. Inside your local git repository, create a directory for both of the  Python Challenges. Use folder names corresponding to the challenges: **WeatherPy**.
+## Generating the cities
 
-4. Inside the folder that you just created, add new files called `WeatherPy.ipynb` and `VacationPy.ipynb`. These will be the main scripts to run for each analysis.
+We first need to generate a list of cities to be processed
 
-5. Push the above changes to GitHub.
+* create list of random coordinates given a range.
 
-## Part I - WeatherPy
+  ```sh
+  city_df = pd.DataFrame()
+  city_df['city'] = ''
 
-In this example, you'll be creating a Python script to visualize the weather of 500+ cities across the world of varying distance from the equator. To accomplish this, you'll be utilizing a [simple Python library](https://pypi.python.org/pypi/citipy), the [OpenWeatherMap API](https://openweathermap.org/api), and a little common sense to create a representative model of weather across world cities.
+  lat_range = np.random.uniform(low=-90.000, high=90.000, size=1500)
+  long_range = np.random.uniform(low=-180.000, high=180.000, size=1500)
+  ```
 
-Your first requirement is to create a series of scatter plots to showcase the following relationships:
+We then generate a dataframe with the name of the city.
 
-* Temperature (F) vs. Latitude
-* Humidity (%) vs. Latitude
-* Cloudiness (%) vs. Latitude
-* Wind Speed (mph) vs. Latitude
+* create list of random coordinates given a range.
 
-After each plot add a sentence or too explaining what the code is and analyzing.
+  ```sh
+  for index in range(len(lat_range)):
+      city_df.loc[index, 'city'] = citipy.nearest_city(lat_range[index],long_range[index]).city_name
 
-Your second requirement is to run linear regression on each relationship, only this time separating them into Northern Hemisphere (greater than or equal to 0 degrees latitude) and Southern Hemisphere (less than 0 degrees latitude):
+  city_df = city_df.drop_duplicates('city',keep='last').reset_index(drop=True)
 
-* Northern Hemisphere - Temperature (F) vs. Latitude
-* Southern Hemisphere - Temperature (F) vs. Latitude
-* Northern Hemisphere - Humidity (%) vs. Latitude
-* Southern Hemisphere - Humidity (%) vs. Latitude
-* Northern Hemisphere - Cloudiness (%) vs. Latitude
-* Southern Hemisphere - Cloudiness (%) vs. Latitude
-* Northern Hemisphere - Wind Speed (mph) vs. Latitude
-* Southern Hemisphere - Wind Speed (mph) vs. Latitude
+  city_df['Lat'] = 'NaN'
+  city_df['Lng'] = 'NaN'
+  city_df['Max Temp']	= 'NaN'
+  city_df['Humidity']	= 'NaN'
+  city_df['Cloudiness'] = 'NaN'
+  city_df['Wind Speed']= 'NaN'
+  city_df['Date']= 'NaN'
 
-After each pair of plots explain what the linear regression is modeling such as any relationships you notice and any other analysis you may have.
+  city_df
+  ```
 
-Your final notebook must:
+### Performing the API calls
 
-* Randomly select **at least** 500 unique (non-repeat) cities based on latitude and longitude.
-* Perform a weather check on each of the cities using a series of successive API calls.
-* Include a print log of each city as it's being processed with the city number and city name.
-* Save a CSV of all retrieved data and a PNG image for each scatter plot.
+After generating the list of cities, generate the remaining needed data through API calls.
 
-### Part II - VacationPy
+* finding the total unique players in the dataset.
 
-Now let's use your skills in working with weather data to plan future vacations. Use jupyter-gmaps and the Google Places API for this part of the assignment.
+  ```sh
+  def query_url(city):
+      weather_key = api_keys.weather_api_key
+      url = 'http://api.openweathermap.org/data/2.5/weather?'
+      units = 'imperial'
+      query_url = f'{url}appid={weather_key}&units={units}&q={city}'
 
-* **Note:** Remember that any API usage beyond the $200 credit will be charged to your personal account. You can set quotas and limits to your daily requests to be sure you can't be charged. Check out [Google Maps Platform Billing](https://developers.google.com/maps/billing/gmp-billing#monitor-and-restrict-consumption) and [Manage your cost of use](https://developers.google.com/maps/documentation/javascript/usage-and-billing#set-caps) for more information.
+      return query_url
+  ```
 
-* **Note:** if you having trouble displaying the maps try running `jupyter nbextension enable --py gmaps` in your environment and retry.
+Then we can generate the columns for the city DataFrame and use a for loop for the API calls. 
 
-* Create a heat map that displays the humidity for every city from the part I of the homework.
+* a function to populate rows in the DataFrame
 
-  ![heatmap](Images/heatmap.png)
+  ```sh
+  def generate_df(df,index,response):
+      df.loc[index, 'Lat'] = response['coord']['lat']
+      df.loc[index, 'Lng'] = response['coord']['lon']
+      df.loc[index,'Country'] = response["sys"]["country"]
+      df.loc[index,'Max Temp']= response['main']['temp_max']
+      df.loc[index, 'Humidity'] = response['main']['humidity']
+      df.loc[index, 'Cloudiness'] = response['clouds']['all']
+      df.loc[index, 'Wind Speed'] = response['wind']['speed']
+      df.loc[index, 'Date'] = response['dt']
+  ```
+* we will generate a dictionary for formatting into a summary table DataFrame:
 
-* Narrow down the DataFrame to find your ideal weather condition. For example:
+  ```sh
+  set_index = 0
+  set_num = 1
+  for index, row in city_df.iterrows():
+      city_name = row['city']
+      query = query_url(city_name)
+      try:
+          response = requests.get(query).json()
+          generate_df(city_df,index,response)
+          if set_index == 50:
+              set_num += 1
+              set_index = 0
+          else:
+              set_index += 1
+          print(f'Processing Record {set_index} of Set {set_num} : {city_name}')
+      except(KeyError,IndexError):
+          city_df.drop([index])
+          print('City not Found. Skipping...')
+  ```
 
-  * A max temperature lower than 80 degrees but higher than 70.
+### Plotting the Data
 
-  * Wind speed less than 10 mph.
+After we generate the city DataFrame, we can now plot data to prove the relationship between distance from the equator and temperature.
 
-  * Zero cloudiness.
+* Generating data using the groupby method
+  ```sh
+  df.plot.scatter(x = 'Max Temp', y = 'Lat', figsize = (8,6))
+  plt.title('Temperature vs Latitude')
 
-  * Drop any rows that don't contain all three conditions. You want to be sure the weather is ideal.
+  df.plot.scatter(x = 'Humidity', y = 'Lat', figsize = (8,6))
+  plt.title('Humidity vs Latitude')
 
-  * **Note:** Feel free to adjust to your specifications but be sure to limit the number of rows returned by your API requests to a reasonable number.
+  df.plot.scatter(x = 'Cloudiness', y = 'Lat', figsize = (8,6))
+  plt.title('Cloudiness vs Latitude')
 
-* Using Google Places API to find the first hotel for each city located within 5000 meters of your coordinates.
+  df.plot.scatter(x = 'Wind Speed', y = 'Lat', figsize = (8,6))
+  plt.title('WInd Speed vs Latitude')
+  ```
 
-* Plot the hotels on top of the humidity heatmap with each pin containing the **Hotel Name**, **City**, and **Country**.
+Next we can generate Linear Regressions for the Dataset as well. 
 
-  ![hotel map](Images/hotel_map.png)
+* using scipy.stat, we can calculate the linear regression.
+  ```sh
+  from scipy.stats import linregress
 
-As final considerations:
+  # Define the hemispheres
 
-* Create a new GitHub repository for this project called `API-Challenge` (note the kebab-case). **Do not add to an existing repo**
-* You must complete your analysis using a Jupyter notebook.
-* You must use the Matplotlib or Pandas plotting libraries.
-* For Part I, you must include a written description of three observable trends based on the data.
-* For Part II, you must include a screenshot of the heatmap you create and include it in your submission.
-* You must use proper labeling of your plots, including aspects like: Plot Titles (with date of analysis) and Axes Labels.
-* For max intensity in the heat map, try setting it to the highest humidity found in the data set.
+  north_hem_df = df.loc[df['Lat'] > 0 ]
+  south_hem_df = df.loc[df['Lat'] < 0 ]
 
-## Hints and Considerations
+  def linear_regression_hemisphere(hemisphere,x_column,y_column):
+      hemisphere.plot.scatter(x=x_column, y = y_column, figsize = (8,6))
+      x_value = hemisphere[x_column]
+      y_value = hemisphere[y_column]
+      (slope, intercept, rvalue, pvalue, stderr) = linregress(x_value,y_value)
+      regress_value = x_value * slope + intercept
+      line_eq = f"y = {slope.round(2)} * x_value + {intercept.round(2)}"
+      print(line_eq)
+      plt.plot(x_value, regress_value, 'r', color = 'blue')
+      plt.title('Regression: temperature vs. latitude (north hemisphere)')
+      plt.show()
+  ```
 
-* The city data you generate is based on random coordinates as well as different query times; as such, your outputs will not be an exact match to the provided starter notebook.
+Next we will input all the calculations into a summary table.
 
-* You may want to start this assignment by refreshing yourself on the [geographic coordinate system](http://desktop.arcgis.com/en/arcmap/10.3/guide-books/map-projections/about-geographic-coordinate-systems.htm).
+* create the linear regressions.
+  ```sh
+  linear_regression_hemisphere(north_hem_df, 'Lat', 'Max Temp')
+  linear_regression_hemisphere(south_hem_df, 'Lat', 'Max Temp')
+  linear_regression_hemisphere(north_hem_df, 'Lat', 'Humidity')
+  linear_regression_hemisphere(south_hem_df, 'Lat', 'Humidity')
+  near_regression_hemisphere(north_hem_df, 'Lat', 'Cloudiness')
+  linear_regression_hemisphere(south_hem_df, 'Lat', 'Cloudiness')
+  linear_regression_hemisphere(north_hem_df, 'Lat', 'Wind Speed')
+  linear_regression_hemisphere(north_hem_df, 'Lat', 'Wind Speed')
+  ```
 
-* Next, spend the requisite time necessary to study the OpenWeatherMap API. Based on your initial study, you should be able to answer  basic questions about the API: Where do you request the API key? Which Weather API in particular will you need? What URL endpoints does it expect? What JSON structure does it respond with? Before you write a line of code, you should be aiming to have a crystal clear understanding of your intended outcome.
+### Analyze vacation information
 
-* A starter code for Citipy has been provided. However, if you're craving an extra challenge, push yourself to learn how it works: [citipy Python library](https://pypi.python.org/pypi/citipy). Before you try to incorporate the library into your analysis, start by creating simple test cases outside your main script to confirm that you are using it correctly. Too often, when introduced to a new library, students get bogged down by the most minor of errors -- spending hours investigating their entire code -- when, in fact, a simple and focused test would have shown their basic utilization of the library was wrong from the start. Don't let this be you!
+We can use the Dataset that was generated in the weather data to draw maps and find hotels. 
 
-* Part of our expectation in this challenge is that you will use critical thinking skills to understand how and why we're recommending the tools we are. What is Citipy for? Why would you use it in conjunction with the OpenWeatherMap API? How would you do so?
+* Get the Dataset for import
+  ```sh
+  df_raw  = pd.read_csv('Data/Cities_clean.csv')
+  ```
 
-* In building your script, pay attention to the cities you are using in your query pool. Are you getting coverage of the full gamut of latitudes and longitudes? Or are you simply choosing 500 cities concentrated in one region of the world? Even if you were a geographic genius, simply rattling 500 cities based on your human selection would create a biased dataset. Be thinking of how you should counter this. (Hint: Consider the full range of latitudes).
+Next, generate the heatmap with the Dataset.
 
-* Once you have computed the linear regression for one chart, the process will be similar for all others. As a bonus, try to create a function that will create these charts based on different parameters.
+* use gmps.configure to put in the API key
+  ```sh
+  test_data  = df_raw[['Lat','Lng','Humidity','Country']]
+  gmaps.configure(api_key = g_key)
 
-* Remember that each coordinate will trigger a separate call to the Google API. If you're creating your own criteria to plan your vacation, try to reduce the results in your DataFrame to 10 or fewer cities.
+  fig = gmaps.figure()
+  locations = test_data[["Lat", "Lng"]]
+  rating = test_data["Humidity"].astype(float)
+  max_humidity = test_data['Humidity'].max()
 
-* Lastly, remember -- this is a challenging activity. Push yourself! If you complete this task, then you can safely say that you've gained a strong mastery of the core foundations of data analytics and it will only go better from here. Good luck!
+  # Create heat layer
+  heat_layer = gmaps.heatmap_layer(locations, weights=rating, 
+                                   dissipating=False, max_intensity=max_humidity,
+                                   point_radius=1)
+  # Add layer
+  fig.add_layer(heat_layer)
 
-* Ensure your repository has regular commits (i.e. 20+ commits) and a thorough README.md file
+  # Display figure
+  fig
+  ```
 
-## Rubric
+Next, lets narrow the Dataset down with specific parameters that we are looking for on our vacation. 
 
-[Unit 6 Rubric - Python API Homework - What's the Weather Like?](https://docs.google.com/document/d/1Y17QYjs0KMeEPPGd_1BpMjnqXiTaJVeFwqea5ReMdeU/edit?usp=sharing)
+* reduce the range of cities with these parameters
+  ```sh
+  # max temperature lower than 80 but higher than 70
+  df_temp = df_raw.loc[df_raw['Max Temp'] < 80 ]
+  df_temp = df_temp.loc[df_raw['Max Temp'] > 70 ]
+  # # wind speed less than 10mph
+  df_wind = df_temp.loc[df_temp['Wind Speed'] < 10]
+  # # zero cloudiness
+  df_cloud = df_wind.loc[df_wind['Cloudiness'] == 0]
+  df_clean = df_cloud.reset_index(drop=True)
+  df_clean
+  ```
 
-- - -
+### Find the hotels
 
-© 2021 Trilogy Education Services, LLC, a 2U, Inc. brand. Confidential and Proprietary. All Rights Reserved.
+Generate a new DataFrame for the hotels. 
+
+* We will be using city, country, lat, lng, and hotel name in the API call.
+  ```sh
+  hotel_df = df_clean.loc[:,['city','Country','Lat','Lng']]
+  hotel_df['Hotel Name'] = ''
+  hotel_df
+
+  import time
+  import requests
+
+  base_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+
+  params = {"type" : "hotel",
+            "keyword" : "hotel",
+            "radius" : 5000,
+            "key" : g_key}
+
+  for index, row in hotel_df.iterrows():
+      city_name = row.loc['city']
+      lat = row["Lat"]
+      lng = row["Lng"]
+      params["location"] = f"{lat},{lng}"
+      print(f'Retriving Reulst for Index {index}: {city_name}')
+      try:
+          response = requests.get(base_url, params = params).json()
+          hotel_df.loc[index,'Hotel Name'] = response['results'][0]['name']
+
+      except (KeyError,IndexError):
+          print("Missing field/result... skipping.")
+      print('----------------------------------------------------------------')
+
+      time.sleep(1)
+
+  print('Finished Searching')
+  ```
+
+This will give us a DataFrame with the names of all the hotels near the cities that matches the criterias we want. Lastly, we generate the name markers of our hotels on the city locations in google maps.
+
+* create the markers for google maps. 
+  ```sh
+  # Add marker layer ontop of heat map
+  markers = gmaps.marker_layer(locations, info_box_content = hotel_info)
+
+  # Add the layer to the map
+  fig.add_layer(markers)
+
+  # Display Map
+  fig
+  ```
