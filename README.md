@@ -13,7 +13,7 @@
 
 ## About The Project
 
-![hero image](https://github.com/HsuChe/pandas-challenge/blob/d552ad43a81eb152fc208a1a150dde6396f97a4f/images/fantasy-3077928_1920.jpg)
+![hero image](https://github.com/HsuChe/python-api-challenge/blob/69e9ff67cfc7c09cf6aacde6f124853f4e0c2b02/Images/tree-832079_1280.jpg)
 
 We are going to prove the correlation between the distance from the equator and the rising max temperature. To do this, we will need to create a dataset through API.
 
